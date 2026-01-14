@@ -3,6 +3,7 @@ import os
 import shutil
 import subprocess
 import threading
+import webbrowser
 from pathlib import Path
 from tkinter import filedialog
 
@@ -54,7 +55,8 @@ class App(ctk.CTk):
                 "generate": "Generate & Render",
                 "preview": "Preview",
                 "preview_area": "Preview in development",
-                "save": "Save Video",
+                "save_mp4": "Save MP4",
+                "save_gif": "Save GIF",
                 "open_external": "Open External",
                 "prompt_placeholder": "Describe the animation...",
                 "prompt_empty": "Prompt is empty.",
@@ -74,6 +76,11 @@ class App(ctk.CTk):
                 "paste": "Paste",
                 "log_fixing": "Render failed, attempting fix #{attempt}...",
                 "log_retry_limit": "Auto-fix stopped after {attempts} attempts.",
+                "log_gif_start": "Converting to GIF...",
+                "log_gif_saved": "GIF saved: {path}",
+                "log_gif_failed": "GIF conversion failed: {error}",
+                "blog_label": "Subscribe to support the project",
+                "blog_button": "Open blog",
             },
             "RU": {
                 "language": "Язык",
@@ -82,7 +89,8 @@ class App(ctk.CTk):
                 "generate": "Сгенерировать и рендерить",
                 "preview": "Предпросмотр",
                 "preview_area": "Предпросмотр пока в разработке",
-                "save": "Сохранить видео",
+                "save_mp4": "Сохранить MP4",
+                "save_gif": "Сохранить GIF",
                 "open_external": "Открыть внешним плеером",
                 "prompt_placeholder": "Опиши анимацию...",
                 "prompt_empty": "Промпт пуст.",
@@ -102,6 +110,11 @@ class App(ctk.CTk):
                 "paste": "Вставить",
                 "log_fixing": "Рендер провалился, попытка исправления #{attempt}...",
                 "log_retry_limit": "Автоисправление остановлено после {attempts} попыток.",
+                "log_gif_start": "Конвертация в GIF...",
+                "log_gif_saved": "GIF сохранен: {path}",
+                "log_gif_failed": "Не удалось создать GIF: {error}",
+                "blog_label": "Подпишитесь, это поддержит проект",
+                "blog_button": "Открыть блог",
             },
         }
         self.lang_var = ctk.StringVar(value="EN")
@@ -156,12 +169,22 @@ class App(ctk.CTk):
         )
         self.quality_menu.grid(row=4, column=0, padx=20, pady=(0, 10), sticky="ew")
 
+        self.blog_label = ctk.CTkLabel(self.sidebar, text=self._t("blog_label"), wraplength=200)
+        self.blog_label.grid(row=5, column=0, padx=20, pady=(10, 6), sticky="w")
+
+        self.blog_button = ctk.CTkButton(
+            self.sidebar,
+            text=self._t("blog_button"),
+            command=self._open_blog,
+        )
+        self.blog_button.grid(row=6, column=0, padx=20, pady=(0, 10), sticky="ew")
+
         self.clear_button = ctk.CTkButton(
             self.sidebar,
             text=self._t("clear"),
             command=self._on_clear,
         )
-        self.clear_button.grid(row=6, column=0, padx=20, pady=(10, 20), sticky="ew")
+        self.clear_button.grid(row=7, column=0, padx=20, pady=(10, 20), sticky="ew")
 
         self.center = ctk.CTkFrame(self, corner_radius=0)
         self.center.grid(row=0, column=1, sticky="nsew")
@@ -240,19 +263,26 @@ class App(ctk.CTk):
             )
             self.preview_image_label.pack(expand=True, fill="both")
 
-        self.save_button = ctk.CTkButton(
+        self.save_mp4_button = ctk.CTkButton(
             self.preview,
-            text=self._t("save"),
-            command=self._on_save_video,
+            text=self._t("save_mp4"),
+            command=self._on_save_mp4,
         )
-        self.save_button.grid(row=2, column=0, padx=20, pady=(0, 10), sticky="ew")
+        self.save_mp4_button.grid(row=2, column=0, padx=20, pady=(0, 8), sticky="ew")
+
+        self.save_gif_button = ctk.CTkButton(
+            self.preview,
+            text=self._t("save_gif"),
+            command=self._on_save_gif,
+        )
+        self.save_gif_button.grid(row=3, column=0, padx=20, pady=(0, 10), sticky="ew")
 
         self.open_button = ctk.CTkButton(
             self.preview,
             text=self._t("open_external"),
             command=self._on_open_player,
         )
-        self.open_button.grid(row=3, column=0, padx=20, pady=(0, 20), sticky="ew")
+        self.open_button.grid(row=4, column=0, padx=20, pady=(0, 20), sticky="ew")
 
         self.footer = ctk.CTkFrame(self, corner_radius=0)
         self.footer.grid(row=1, column=0, columnspan=3, sticky="ew")
@@ -282,8 +312,11 @@ class App(ctk.CTk):
         self.paste_button.configure(text=self._t("paste"))
         self.generate_button.configure(text=self._t("generate"))
         self.preview_label.configure(text=self._t("preview"))
-        self.save_button.configure(text=self._t("save"))
+        self.save_mp4_button.configure(text=self._t("save_mp4"))
+        self.save_gif_button.configure(text=self._t("save_gif"))
         self.open_button.configure(text=self._t("open_external"))
+        self.blog_label.configure(text=self._t("blog_label"))
+        self.blog_button.configure(text=self._t("blog_button"))
         self._prompt_placeholder = self._t("prompt_placeholder")
         if self._prompt_placeholder_active:
             self._set_prompt_placeholder()
@@ -358,10 +391,17 @@ class App(ctk.CTk):
     def _set_action_state(self, enabled):
         def _apply():
             state = "normal" if enabled else "disabled"
-            self.save_button.configure(state=state)
+            self.save_mp4_button.configure(state=state)
+            self.save_gif_button.configure(state=state)
             self.open_button.configure(state=state)
 
         self.after(0, _apply)
+
+    def _open_blog(self):
+        try:
+            webbrowser.open("https://t.me/+ay37cKnFWtg3MDJi")
+        except Exception:
+            self._append_log(self._t("log_error", error="Failed to open blog"), tag="error")
 
     def _set_progress(self, percent, text=None):
         percent = max(0, min(100, int(percent)))
@@ -478,7 +518,13 @@ class App(ctk.CTk):
         self.log_text.configure(state="disabled")
         self._append_log(self._t("log_cleared"))
 
-    def _on_save_video(self):
+    def _on_save_mp4(self):
+        self._save_video_as("mp4")
+
+    def _on_save_gif(self):
+        self._save_video_as("gif")
+
+    def _save_video_as(self, ext):
         source_path = self.output_video_path or self.last_video_path
         if not source_path:
             self._append_log(self._t("log_no_video_save"))
@@ -488,16 +534,42 @@ class App(ctk.CTk):
             self._append_log(self._t("log_video_not_found"))
             return
 
+        filetypes = [("MP4 Video", "*.mp4")] if ext == "mp4" else [("GIF Animation", "*.gif")]
+        default_ext = ".mp4" if ext == "mp4" else ".gif"
         file_path = filedialog.asksaveasfilename(
-            defaultextension=".mp4",
-            initialfile=source.name,
-            filetypes=[("MP4 Video", "*.mp4")],
+            defaultextension=default_ext,
+            initialfile=source.with_suffix(default_ext).name,
+            filetypes=filetypes,
         )
         if not file_path:
             return
 
-        shutil.copy2(source, file_path)
-        self._append_log(self._t("log_video_saved", path=file_path))
+        target = Path(file_path)
+        if ext == "gif" or target.suffix.lower() == ".gif":
+            self._append_log(self._t("log_gif_start"))
+            cmd = [
+                "ffmpeg",
+                "-y",
+                "-i",
+                str(source),
+                "-vf",
+                "fps=15,scale=640:-1:flags=lanczos",
+                str(target),
+            ]
+            result = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            if result.returncode != 0:
+                error_text = result.stderr.strip() or "ffmpeg failed"
+                self._append_log(self._t("log_gif_failed", error=error_text), tag="error")
+                return
+            self._append_log(self._t("log_gif_saved", path=file_path))
+        else:
+            shutil.copy2(source, file_path)
+            self._append_log(self._t("log_video_saved", path=file_path))
 
     def _on_open_player(self):
         source_path = self.output_video_path or self.last_video_path

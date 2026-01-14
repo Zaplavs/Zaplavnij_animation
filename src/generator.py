@@ -32,6 +32,8 @@ class CodeGenerator:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
             )
         except FileNotFoundError as exc:
             logger.error("LLM command not found: %s", cmd[0])

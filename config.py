@@ -1,6 +1,6 @@
 OUTPUT_DIR = "output"
 SCENE_NAME = "GenScene"
-QWEN_MODEL = "qwen"
+QWEN_MODEL = "qwen3-coder-plus"
 QWEN_CLI = r"C:\Users\user\AppData\Roaming\npm\qwen.ps1"
 LLM_COMMAND = [
     "powershell",
