@@ -8,8 +8,13 @@ media/
 # Output
 output/
 
+# Project docs
+AGENTS.MD
+
 # Virtual environments
 .venv/
 venv/
 ENV/
 env/
+
+AGENTS.MD
