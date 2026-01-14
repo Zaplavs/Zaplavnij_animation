@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Manim
+media/
+
+# Output
+output/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
