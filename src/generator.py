@@ -47,8 +47,11 @@ class CodeGenerator:
         if stderr:
             logger.debug("LLM stderr:\n%s", stderr)
         if process.returncode != 0:
+            err_text = (stderr or "").strip()
             logger.error("LLM command failed with code %s", process.returncode)
-            raise RuntimeError("LLM command failed")
+            if err_text:
+                logger.error("LLM stderr:\n%s", err_text)
+            raise RuntimeError(f"LLM command failed: {err_text or 'unknown error'}")
 
         cleaned = self._clean_response(stdout)
         if not cleaned.strip():

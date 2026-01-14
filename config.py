@@ -2,7 +2,7 @@ OUTPUT_DIR = "output"
 SCENE_NAME = "GenScene"
 QWEN_MODEL = "qwen3-coder-plus"
 QWEN_CLI = r"C:\Users\user\AppData\Roaming\npm\qwen.ps1"
-LLM_COMMAND = [
+QWEN_COMMAND = [
     "powershell",
     "-ExecutionPolicy",
     "Bypass",
@@ -13,6 +13,21 @@ LLM_COMMAND = [
     "-p",
     "{prompt}",
 ]
+CODEX_CLI = r"C:\Users\user\AppData\Roaming\npm\codex.cmd"
+CODEX_COMMAND = [
+    CODEX_CLI,
+    "exec",
+    "-",
+    "--skip-git-repo-check",
+    "-m",
+    "gpt-5.2-codex",
+]
+LLM_PROVIDER = "codex"
+LLM_COMMANDS = {
+    "qwen": QWEN_COMMAND,
+    "codex": CODEX_COMMAND,
+}
+LLM_COMMAND = LLM_COMMANDS.get(LLM_PROVIDER, QWEN_COMMAND)
 MAX_FIX_ATTEMPTS = 0
 SYSTEM_PROMPT = (
     "You are a Python expert specializing in the Manim Community library.\n"
