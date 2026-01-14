@@ -31,7 +31,7 @@ class App(ctk.CTk):
         ctk.set_appearance_mode("Dark")
         ctk.set_default_color_theme("dark-blue")
 
-        self.title("ManimAI")
+        self.title("ЗАПЛАВНЫЙ_AI")
         self.geometry("1100x700")
         self.minsize(980, 620)
 
@@ -129,7 +129,7 @@ class App(ctk.CTk):
 
         title = ctk.CTkLabel(
             self.sidebar,
-            text="ManimAI",
+            text="ЗАПЛАВНЫЙ_AI",
             font=ctk.CTkFont(size=22, weight="bold"),
         )
         title.grid(row=0, column=0, padx=20, pady=(20, 10), sticky="w")
